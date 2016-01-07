@@ -3,6 +3,7 @@ Pass the Pigs the probabilities come from here
 http://passpigs.tripod.com/index.html
 http://www.amstat.org/publications/jse/v14n3/datasets.kern.html
 
+TODO add a turn score feature
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,18 +31,24 @@ int roll()
   return p;
 }
 
-  
-int strat0(score)
+// the strategy for player 0
+int strat0(score, turnscore)
 {
   int action;
   action = 0;
+  if( turnscore > 50){
+    action = 1;
+  }else {
+    action = 0;
+  }
   return action;
 }
 
-int strat1(score)
+// the strategy for player 1
+int strat1(score, turnscore)
 {
   int action;
-  if (score > 20){
+  if( turnscore > 5){
     action = 1;
   }else{
     action = 0;
@@ -50,7 +57,7 @@ int strat1(score)
 }
 
 
-
+// play a round of pass the pigs
 int playround()
 {
   //set up the things
@@ -74,29 +81,35 @@ int playround()
   int done = 0;
   int pup, p1,p2,score,action,winner,turnscore;
   while(done == 0){
+    //which player is up
     pup = turn % np;
 
     p1 = roll();
     p2 = roll();
     score = scoret[p1][p2];
     if (score == 0){
-      ps[pup] = 0;
-      turn ++;
-    }else {
-      ps[pup]  = ps[pup]+ score;
       
-      if( ps[pup] >= 100){
+      turn ++;
+      turnscore = 0;
+    }else {
+      turnscore += score; 
+      if( ps[pup] + turnscore >= 100){
 	done = 1;
 	winner = pup;
 	break;
       }
       
       if( pup == 0){
-	action = strat0(score);
+	action = strat0(score,turnscore);
       } else if (pup == 1 ){
-	action = strat1(score);
+	action = strat1(score, turnscore);
       }
-      turn = turn + action; 
+      if(action == 1){
+	ps[pup] += turnscore;
+	turnscore = 0;
+      }
+      
+      turn += action;
     }
   } 
 
@@ -115,7 +128,7 @@ int main()
   int i = 0;
   int numwins[] = {0,0};
   int winner;
-  for (i=0; i<10000; i++){
+  for (i=0; i<100000; i++){
     winner = playround();
     numwins[winner] ++;
   }
